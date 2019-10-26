@@ -16,6 +16,7 @@ class PhotoProcessing():
 
     def processing(self):
 
+        #TODO Пилить в Async в Redis, последний результат отдавать в Flask
         with picamera.PiCamera() as camera:
             camera.rotation = 180
             camera.resolution = (1024, 768)
