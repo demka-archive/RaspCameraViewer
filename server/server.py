@@ -1,22 +1,34 @@
 from flask import Flask, request, send_file
 from flask_restful import Resource, Api
-import picamera
+#import picamera
+import multiprocessing as mp
 import time
 import uuid
+import redis
+import base64
 
+import numpy as np
 
+r_redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
 app = Flask(__name__)
 api = Api(app)
+
+
+def get_photo():
+    while True:
+        PhotoProcessing()
+        time.sleep(3)
 
 class PhotoProcessing():
     def __init__(self):
         self.result = False
-        self.file_name = str(uuid.uuid1())+".jpg"
-        self.processing()
+        #self.file_name = str(uuid.uuid1())+".jpg"
+        self.file_name = "download.jpeg"
+        #self.processing()
+        #if self.result:
+        self.redis_writer()
 
     def processing(self):
-
-        #TODO Пилить в Async в Redis, последний результат отдавать в Flask
         with picamera.PiCamera() as camera:
             camera.rotation = 180
             camera.resolution = (1024, 768)
@@ -24,20 +36,31 @@ class PhotoProcessing():
             time.sleep(2)
             camera.capture(self.file_name)
         self.result = True
+    
+    def redis_writer(self):
 
+        import base64
+
+        with open(self.file_name, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read())
+        r_redis.set("img", encoded_string)
 
 class GetPhoto(Resource):
     def get(self):
         """
-        Метод для получения фото с камеры Raspberry Pi
+        Метод для получения фото с Redis
         """
-        obj = PhotoProcessing()
-        if obj.result == True:
-            return send_file(obj.file_name, mimetype='image/png')
-        else:
+        try:
+            file_base64 = bytes(r_redis.get("img"))
+            with open("img.jpg", "wb") as f:
+                f.write(base64.decodebytes(file_base64))
+            return send_file("img.jpg", mimetype='image/jpg')
+        except:
             return {"status": "exception"}
 
 api.add_resource(GetPhoto, '/get_photo')
 
 if __name__ == '__main__':
-    app.run(host='192.168.5.171', debug=False)
+    p = mp.Process(target=get_photo)
+    p.start()
+    app.run(host='127.0.0.1', debug=False)
