@@ -1,15 +1,12 @@
 from flask import Flask, request, send_file
 from flask_restful import Resource, Api
-#import picamera
+import picamera
 import multiprocessing as mp
 import time
-import uuid
 import redis
 import base64
 
-import numpy as np
-
-r_redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
+r_redis = redis.Redis(host='redis', port=6379, db=1)
 app = Flask(__name__)
 api = Api(app)
 
@@ -22,10 +19,8 @@ def get_photo():
 class PhotoProcessing():
     def __init__(self):
         self.result = False
-        #self.file_name = str(uuid.uuid1())+".jpg"
-        self.file_name = "download.jpeg"
-        #self.processing()
-        #if self.result:
+        self.file_name = "image.jpg"
+        self.processing()
         self.redis_writer()
 
     def processing(self):
@@ -38,8 +33,6 @@ class PhotoProcessing():
         self.result = True
     
     def redis_writer(self):
-
-        import base64
 
         with open(self.file_name, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
@@ -63,4 +56,4 @@ api.add_resource(GetPhoto, '/get_photo')
 if __name__ == '__main__':
     p = mp.Process(target=get_photo)
     p.start()
-    app.run(host='127.0.0.1', debug=False)
+    app.run(host='0.0.0.0', debug=False)

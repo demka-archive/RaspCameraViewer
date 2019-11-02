@@ -1,9 +1,6 @@
-lxml==4.4.1
+picamera==1.13
 Flask==1.1.1
 Flask-RESTful==0.3.7
 requests==2.22.0
 PyYAML==5.1.2
 redis==3.1.0
-rq==0.13.0
-numpy==1.17.1
-sympy==1.4
