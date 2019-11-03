@@ -1,18 +1,28 @@
 version: '3'
+
+networks:
+  app-network:
+    driver: bridge
+
 services:
 
   server:
     build: ./
     depends_on:
       - redis
-    restart: on-failure
     ports:
       - "5000:5000"
+    devices:
+      - "/dev/vchiq:/dev/vchiq"
+    networks:
+      - app-network
+    restart: on-failure
+    
+  
   redis:
-    image: 'bitnami/redis:latest'
+    image: redis
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
-      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-    labels:
-      kompose.service.type: nodeport
+    networks:
+      - app-network
     restart: on-failure
