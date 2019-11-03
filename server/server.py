@@ -9,7 +9,7 @@ import base64
 import numpy as np
 import io
 
-r_redis = redis.Redis(host='redis', port=6379, db=1)
+r_redis = redis.Redis(host='127.0.0.1', port=6379, db=1)
 app = Flask(__name__)
 api = Api(app)
 
@@ -33,10 +33,10 @@ class PhotoProcessing():
             time.sleep(2)
             camera.capture(stream, format='jpeg')
         stream.seek(0)
-        self.data = stream
-    
+        self.stream = stream
+
     def redis_writer(self):
-        encoded_string = base64.b64encode(self.data)
+        encoded_string = base64.b64encode(self.stream.read())
         r_redis.set("img", encoded_string)
 
 class GetPhoto(Resource):
@@ -44,17 +44,21 @@ class GetPhoto(Resource):
         """
         Метод для получения фото с Redis
         """
-        try:
-            file_base64 = bytes(r_redis.get("img"))
-            in_memory_file = io.BytesIO(file_base64)
-            data = np.frombuffer(in_memory_file.getvalue(), dtype=np.uint8)
-            return send_file(data, mimetype='image/jpg')
-        except:
-            return {"status": "exception"}
-
+        file_base64 = r_redis.get("img")
+        with open("img.jpg", "wb") as f:
+                f.write(base64.decodebytes(file_base64))
+        return send_file("img.jpg", mimetype='image/jpg')
+        
+        #TODO Отдача файла без записи на SD-карту (она плакает)
+        #return send_file(
+        #    io.BytesIO(file_base64),
+        #    attachment_filename='logo.jpeg',
+        #    mimetype='image/jpg'
+        #)
+       
 api.add_resource(GetPhoto, '/get_photo')
 
 if __name__ == '__main__':
     p = mp.Process(target=get_photo)
     p.start()
-    app.run(host='0.0.0.0', debug=False)
+    app.run(host='192.168.5.171', debug=False)
