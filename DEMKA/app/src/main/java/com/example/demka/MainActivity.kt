@@ -1,10 +1,12 @@
 package com.example.demka
 
+import android.content.DialogInterface
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+
 
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -15,14 +17,23 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Выход")
+        builder.setMessage("Вы точно хотите выйти?")
+        builder.setPositiveButton("Да",{ dialogInterface: DialogInterface, i: Int -> finish()})
+        builder.setNegativeButton("Нет",{ dialogInterface: DialogInterface, i: Int ->
+            builder.show()
+        })
+
+        val obj = StringGenerator()
         fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+            Snackbar.make(view, obj.get_string(), Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the CheckActivityClassmenu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
